@@ -35,26 +35,6 @@ spec:
     app: planning-poker-server
 
 ---
-apiVersion: v1
-kind: List
-items:
-  - apiVersion: cert-manager.io/v1
-    kind: Issuer
-    metadata:
-      name: letsencrypt-prod
-      namespace: planning-poker
-    spec:
-      acme:
-        email: letsencrypt@maex.me
-        privateKeySecretRef:
-          name: letsencrypt-prod
-        server: https://acme-v02.api.letsencrypt.org/directory
-        solvers:
-          - http01:
-              ingress: {}
-            selector: {}
-
----
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
