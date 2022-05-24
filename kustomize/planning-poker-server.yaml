@@ -15,7 +15,7 @@ spec:
         app: planning-poker-server
     spec:
       containers:
-        - image: mstruebing/planning-poker-server:dev
+        - image: mstruebing/planning-poker-server:latest
           imagePullPolicy: Always
           name: planning-poker-server
 
