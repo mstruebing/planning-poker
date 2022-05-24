@@ -36,28 +36,3 @@
     transform: rotate(360deg);
   }
 }
-
-.vote {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1em;
-}
-
-.vote button {
-  padding: 1em;
-  border: 1px solid black;
-}
-
-.vote button.active {
-  background-color: red;
-}
-
-.result {
-  padding: 1em;
-  border: 1px solid black;
-}
-
-.reset {
-  margin-top: 1em;
-  margin-bottom: 1em;
-}
