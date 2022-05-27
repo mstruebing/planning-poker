@@ -1,4 +1,4 @@
-FROM node:16.15.0-alpine3.14
+FROM node:16.15.0-alpine3.14 as builder
 
 WORKDIR /src
 
@@ -6,6 +6,16 @@ ADD package*.json /src
 RUN npm install
 
 ADD . /src
-EXPOSE 8080
+RUN npm run build
 
-CMD ["npm", "run", "start"]
+FROM node:16.15.0-alpine3.14 
+
+WORKDIR /src
+
+COPY --from=builder /src /src/
+RUN rm -rf node_modules
+RUN npm install --production
+
+
+EXPOSE 8080
+CMD ["node", "dist/index.js"]

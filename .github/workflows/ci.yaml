@@ -20,7 +20,8 @@ jobs:
 
       - run: npm ci
       - run: npm run format:validate
-      - run: npm --workspaces test
+      - run: npm run --workspaces test:types
+      - run: npm run --workspaces test
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2

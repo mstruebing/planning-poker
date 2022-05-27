@@ -1,7 +1,12 @@
 import { WebSocketServer, WebSocket } from "ws";
 import { v4 } from "uuid";
 
-const wss = new WebSocketServer({ port: 8080 });
+interface EnhancedWebsocket extends WebSocket {
+  id: string;
+  vote: string | null;
+}
+
+const wss = new WebSocketServer<EnhancedWebsocket>({ port: 8080 });
 
 const sendVotings = () => {
   wss.clients.forEach(function each(client) {
@@ -18,19 +23,17 @@ const sendVotings = () => {
   });
 };
 
-wss.getUniqueID = v4;
-
-wss.on("connection", function connection(ws) {
-  ws.id = wss.getUniqueID();
+wss.on("connection", (ws) => {
+  ws.id = v4();
   ws.vote = null;
 
   sendVotings();
 
-  ws.on("message", function message(data) {
-    const { event, payload } = JSON.parse(data);
+  ws.on("message", (data) => {
+    const { event, payload } = JSON.parse(data.toString());
 
     if (event === "RESET") {
-      wss.clients.forEach(function each(client) {
+      wss.clients.forEach((client: EnhancedWebsocket) => {
         client.vote = null;
         if (client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify({ event: "RESET", payload: null }));
@@ -45,7 +48,7 @@ wss.on("connection", function connection(ws) {
     }
   });
 
-  ws.on("close", function close() {
+  ws.on("close", () => {
     sendVotings();
   });
 });

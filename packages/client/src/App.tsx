@@ -5,7 +5,7 @@ const ws = new WebSocket("wss://planning-server.maex.me");
 
 const POSSIBLE_VOTES = ["?", 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 
-const shouldShowResults = (votings) => {
+const shouldShowResults = (votings: Array<string | null>) => {
   return votings.every((v) => v !== null);
 };
 
@@ -60,6 +60,7 @@ function App() {
                   ? VOTE_BUTTON_STYLE_ACTIVE
                   : VOTE_BUTTON_STYLE_INACTIVE
               }`}
+              // @ts-ignore
               onClick={() => setVote(possibleVote)}
               key={possibleVote}
             >
