@@ -1,16 +1,12 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
+import { shouldShowResults, POSSIBLE_VOTES, average } from "./votings";
+
 const SOCKET_URL =
   window.__RUNTIME_CONFIG__?.SOCKET_URL ?? "ws://localhost:8080";
 
 const ws = new WebSocket(SOCKET_URL);
-
-const POSSIBLE_VOTES = ["?", 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
-
-const shouldShowResults = (votings: Array<string | null>) => {
-  return votings.every((v) => v !== null);
-};
 
 const VOTE_BUTTON_STYLE = "p-4 rounded-md text-white hover:-translate-y-0.5";
 
@@ -46,6 +42,8 @@ function App() {
     ws.send(JSON.stringify({ event: "RESET" }));
   };
 
+  const showResults = shouldShowResults(votings);
+
   return (
     <div className="App">
       <main>
@@ -79,10 +77,11 @@ function App() {
                 key={index}
                 className="border-2 border-blue-200 p-4 rounded-md"
               >
-                {shouldShowResults(votings) === true ? v : v ? "x" : "?"}
+                {showResults ? v : v ? "x" : "?"}
               </span>
             ))}
           </div>
+          <div>{showResults && `Average: ${average(votings)}`}</div>
         </div>
       </main>
     </div>
