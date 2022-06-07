@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 
-const ws = new WebSocket("wss://planning-server.maex.me");
+const SOCKET_URL =
+  window.__RUNTIME_CONFIG__?.SOCKET_URL ?? "ws://localhost:8080";
+
+const ws = new WebSocket(SOCKET_URL);
 
 const POSSIBLE_VOTES = ["?", 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 
