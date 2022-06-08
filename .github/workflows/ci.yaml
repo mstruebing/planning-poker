@@ -38,8 +38,8 @@ jobs:
         env:
           TAG_NAME: ${{ steps.tagname.outputs.timestamp }}
         with:
-          context: "{{defaultContext}}:packages/client"
           push: true
+          file: "Dockerfile.client"
           tags: mstruebing/planning-poker-client:${{ steps.tagname.outputs.timestamp }}
 
       - name: Build and push server
@@ -47,6 +47,6 @@ jobs:
         env:
           TAG_NAME: ${{ steps.tagname.outputs.timestamp }}
         with:
-          context: "{{defaultContext}}:packages/server"
           push: true
+          file: "Dockerfile.server"
           tags: mstruebing/planning-poker-server:${{ steps.tagname.outputs.timestamp }}
