@@ -2,14 +2,12 @@ name: ci
 
 on:
   push:
-    branches:
-      - "main"
 
 jobs:
-  docker:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Set current date as env variable
+      - name: Set current timestamp as env variable
         id: tagname
         run: echo "::set-output name=timestamp::$(date +'%s')"
 
@@ -38,7 +36,7 @@ jobs:
         env:
           TAG_NAME: ${{ steps.tagname.outputs.timestamp }}
         with:
-          push: true
+          push: ${{ github.ref_name == 'main' }}
           file: "Dockerfile.client"
           tags: mstruebing/planning-poker-client:${{ steps.tagname.outputs.timestamp }}
 
@@ -47,6 +45,6 @@ jobs:
         env:
           TAG_NAME: ${{ steps.tagname.outputs.timestamp }}
         with:
-          push: true
+          push: ${{ github.ref_name == 'main' }}
           file: "Dockerfile.server"
           tags: mstruebing/planning-poker-server:${{ steps.tagname.outputs.timestamp }}
