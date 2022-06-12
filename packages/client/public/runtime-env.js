@@ -1,0 +1,1 @@
+window.__RUNTIME_CONFIG__ = {"SOCKET_URL":"ws://localhost:8080"};
