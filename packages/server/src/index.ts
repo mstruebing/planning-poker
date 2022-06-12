@@ -1,5 +1,7 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { Cluster } from "ioredis";
 
 import { store, getAllVotes, resetStore } from "./store";
 
@@ -9,6 +11,20 @@ const io = new Server(httpServer, {
     origin: "*",
   },
 });
+
+if (process.env.REDIS_URL === undefined) {
+  throw new Error("Please provide an `REDIS_URL`");
+}
+
+const pubClient = new Cluster([
+  {
+    host: process.env.REDIS_URL,
+    port: 6379,
+  },
+]);
+
+const subClient = pubClient.duplicate();
+io.adapter(createAdapter(pubClient, subClient));
 
 httpServer.listen(8080);
 
