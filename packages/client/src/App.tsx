@@ -20,11 +20,11 @@ const VOTE_BUTTON_STYLE_INACTIVE =
   "bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-300 border-2 border-blue-700 hover:border-blue-800";
 
 function App() {
-  const [vote, setVote] = useState(null);
+  const [vote, setVote] = useState("");
   const [votings, setVotings] = useState([]);
 
   const reset = () => {
-    setVote(null);
+    setVote("");
   };
 
   useEffect(() => {
@@ -36,7 +36,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (vote !== null) {
+    if (vote !== "") {
       socket.emit("VOTE", vote);
     }
   }, [vote]);
