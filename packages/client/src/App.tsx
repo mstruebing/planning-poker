@@ -10,6 +10,7 @@ const SOCKET_URL =
 const socket = io(SOCKET_URL, {
   autoConnect: true,
   transports: ["websocket"],
+  withCredentials: true,
 });
 
 const VOTE_BUTTON_STYLE = "p-4 rounded-md text-white hover:-translate-y-0.5";

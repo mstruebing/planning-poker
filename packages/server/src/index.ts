@@ -9,6 +9,7 @@ const httpServer = createServer();
 const io = new Server(httpServer, {
   cors: {
     origin: "*",
+    credentials: true,
   },
 });
 
