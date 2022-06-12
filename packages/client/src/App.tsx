@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 import "./App.css";
 
 import { shouldShowResults, POSSIBLE_VOTES, average } from "./votings";
@@ -6,7 +7,9 @@ import { shouldShowResults, POSSIBLE_VOTES, average } from "./votings";
 const SOCKET_URL =
   window.__RUNTIME_CONFIG__?.SOCKET_URL ?? "ws://localhost:8080";
 
-const ws = new WebSocket(SOCKET_URL);
+const socket = io(SOCKET_URL, {
+  autoConnect: true,
+});
 
 const VOTE_BUTTON_STYLE = "p-4 rounded-md text-white hover:-translate-y-0.5";
 
@@ -18,28 +21,27 @@ function App() {
   const [vote, setVote] = useState(null);
   const [votings, setVotings] = useState([]);
 
+  const reset = () => {
+    setVote(null);
+  };
+
   useEffect(() => {
-    ws.onmessage = function ({ data }) {
-      const { event, payload } = JSON.parse(data);
+    socket.on("RESET", reset);
 
-      if (event === "RESET") {
-        setVote(null);
-      }
-
-      if (event === "VOTINGS") {
-        setVotings(payload.votings);
-      }
-    };
+    socket.on("VOTINGS", (data) => {
+      setVotings(data);
+    });
   }, []);
 
   useEffect(() => {
     if (vote !== null) {
-      ws.send(JSON.stringify({ event: "VOTE", payload: { vote } }));
+      socket.emit("VOTE", vote);
     }
   }, [vote]);
 
-  const reset = () => {
-    ws.send(JSON.stringify({ event: "RESET" }));
+  const handleClickReset = () => {
+    reset();
+    socket.emit("RESET");
   };
 
   const showResults = shouldShowResults(votings);
@@ -49,7 +51,7 @@ function App() {
       <main>
         <button
           className="my-4 border-2 rounded-full p-2 border-blue-200"
-          onClick={reset}
+          onClick={handleClickReset}
         >
           RESET
         </button>

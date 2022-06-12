@@ -1,54 +1,50 @@
-import { WebSocketServer, WebSocket } from "ws";
-import { v4 } from "uuid";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
-interface EnhancedWebsocket extends WebSocket {
-  id: string;
-  vote: string | null;
-}
+import { store, getAllVotes, resetStore } from "./store";
 
-const wss = new WebSocketServer<EnhancedWebsocket>({ port: 8080 });
+const httpServer = createServer();
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+  },
+});
 
-const sendVotings = () => {
-  wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(
-        JSON.stringify({
-          event: "VOTINGS",
-          payload: {
-            votings: [...wss.clients].map((client) => client.vote),
-          },
-        })
-      );
-    }
-  });
-};
+httpServer.listen(8080);
 
-wss.on("connection", (ws) => {
-  ws.id = v4();
-  ws.vote = null;
+io.on("connection", (socket) => {
+  store[socket.id] = {
+    vote: null,
+  };
 
-  sendVotings();
+  // Broadcast votes also sends all votes to the
+  // socket responsible for triggering the broadcast
+  const broadcastVotes = () => {
+    const allVotes = getAllVotes(store);
+    socket.emit("VOTINGS", allVotes);
+    socket.broadcast.emit("VOTINGS", allVotes);
+  };
 
-  ws.on("message", (data) => {
-    const { event, payload } = JSON.parse(data.toString());
+  broadcastVotes();
 
-    if (event === "RESET") {
-      wss.clients.forEach((client: EnhancedWebsocket) => {
-        client.vote = null;
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ event: "RESET", payload: null }));
-        }
-      });
-      sendVotings();
-    }
-
-    if (event === "VOTE") {
-      ws.vote = payload.vote;
-      sendVotings();
-    }
+  // Debug logs
+  socket.onAny((event, ...args) => {
+    console.log(`got ${event}, with args: ${JSON.stringify(args)}`);
   });
 
-  ws.on("close", () => {
-    sendVotings();
+  socket.on("VOTE", (data) => {
+    store[socket.id].vote = data;
+    broadcastVotes();
+  });
+
+  socket.on("RESET", () => {
+    resetStore(store);
+    socket.broadcast.emit("RESET");
+    broadcastVotes();
+  });
+
+  socket.on("disconnect", function () {
+    delete store[socket.id];
+    broadcastVotes();
   });
 });
