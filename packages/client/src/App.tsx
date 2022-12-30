@@ -8,7 +8,7 @@ function App() {
   const [roomNumber, setRoomNumber] = React.useState("");
 
   const socket = io(`${SOCKET_URL}`, {
-    autoConnect: true,
+    autoConnect: false,
     transports: ["websocket"],
     withCredentials: true,
     timestampRequests: true,
@@ -17,6 +17,14 @@ function App() {
   const createNewRoom = () => {
     socket.emit("GET_ROOM");
   };
+
+  React.useEffect(() => {
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   React.useEffect(() => {
     socket.on("ROOM_NUMBER", (data) => {
