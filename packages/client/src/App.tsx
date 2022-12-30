@@ -1,95 +1,62 @@
-import { useEffect, useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
-import "./App.css";
-
-import { shouldShowResults, POSSIBLE_VOTES, average } from "./votings";
-
-const SOCKET_URL =
-  window.__RUNTIME_CONFIG__?.SOCKET_URL ?? "ws://localhost:8080";
-
-const socket = io(SOCKET_URL, {
-  autoConnect: true,
-  transports: ["websocket"],
-  withCredentials: true,
-  timestampRequests: true,
-});
-
-const VOTE_BUTTON_STYLE = "p-4 rounded-md text-white hover:-translate-y-0.5";
-
-const VOTE_BUTTON_STYLE_ACTIVE = "bg-gradient-to-r from-green-400 to-green-500";
-const VOTE_BUTTON_STYLE_INACTIVE =
-  "bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-300 border-2 border-blue-700 hover:border-blue-800";
+import { SOCKET_URL } from "./Room";
 
 function App() {
-  const [vote, setVote] = useState("");
-  const [votings, setVotings] = useState([]);
+  const navigate = useNavigate();
+  const [roomNumber, setRoomNumber] = React.useState("");
 
-  const reset = () => {
-    setVote("");
+  const socket = io(`${SOCKET_URL}`, {
+    autoConnect: true,
+    transports: ["websocket"],
+    withCredentials: true,
+    timestampRequests: true,
+  });
+
+  const createNewRoom = () => {
+    socket.emit("GET_ROOM");
   };
 
-  useEffect(() => {
-    socket.on("RESET", reset);
-
-    socket.on("VOTINGS", (data) => {
-      setVotings(data);
+  React.useEffect(() => {
+    socket.on("ROOM_NUMBER", (data) => {
+      navigate(`/${data}`);
     });
   }, []);
 
-  useEffect(() => {
-    if (vote !== "") {
-      socket.emit("VOTE", vote);
-    }
-  }, [vote]);
-
-  const handleClickReset = () => {
-    reset();
-    socket.emit("RESET");
+  const joinRoom = () => {
+    return navigate(`/${roomNumber}`);
   };
 
-  const showResults = shouldShowResults(votings);
-
   return (
-    <div className="App">
-      <main>
+    <form className="container mx-auto w-6/12">
+      <div className="flex items-center border-b border-teal-500 py-2">
+        <input
+          onInput={(e) => setRoomNumber(e.currentTarget.value)}
+          className="appearance-none bg-transparent border-none w-full text-gray-700 mr-3 py-1 px-2 leading-tight focus:outline-none"
+          type="text"
+          placeholder="Room Number"
+          aria-label="Room Number"
+        />
         <button
-          className="my-4 border-2 rounded-full p-2 border-blue-200"
-          onClick={handleClickReset}
+          onClick={joinRoom}
+          className="flex-shrink-0 bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+          type="button"
         >
-          RESET
+          Join Room
         </button>
-        <div className="flex justify-center space-x-4 mb-4">
-          {POSSIBLE_VOTES.map((possibleVote) => (
-            <button
-              className={`${VOTE_BUTTON_STYLE} ${
-                vote === possibleVote
-                  ? VOTE_BUTTON_STYLE_ACTIVE
-                  : VOTE_BUTTON_STYLE_INACTIVE
-              }`}
-              // @ts-ignore
-              onClick={() => setVote(possibleVote)}
-              key={possibleVote}
-            >
-              {possibleVote}
-            </button>
-          ))}
-        </div>
-        <div>
-          <div className="mb-4">Results:</div>
-          <div className="flex justify-center space-x-2">
-            {votings.map((v, index) => (
-              <span
-                key={index}
-                className="border-2 border-blue-200 p-4 rounded-md"
-              >
-                {showResults ? v : v ? "x" : "?"}
-              </span>
-            ))}
-          </div>
-          <div>{showResults && `Average: ${average(votings)}`}</div>
-        </div>
-      </main>
-    </div>
+      </div>
+
+      <div className="flex items-center py-2">
+        <button
+          onClick={createNewRoom}
+          className="w-full bg-teal-500 hover:bg-teal-700 border-teal-500 hover:border-teal-700 text-sm border-4 text-white py-1 px-2 rounded"
+          type="button"
+        >
+          Create a New Room
+        </button>
+      </div>
+    </form>
   );
 }
 

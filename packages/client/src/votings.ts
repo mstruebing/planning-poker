@@ -1,7 +1,7 @@
 export const POSSIBLE_VOTES = ["?", 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 
 export const shouldShowResults = (votings: Array<string>): boolean => {
-  return votings.every((v) => v !== "");
+  return votings.every((v) => v !== "" && v !== null);
 };
 
 export const average = (votings: Array<string>): number => {
