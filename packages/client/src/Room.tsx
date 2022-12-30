@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import "./Room.css";
 
 import { shouldShowResults, POSSIBLE_VOTES, average } from "./votings";
@@ -7,12 +7,15 @@ import { shouldShowResults, POSSIBLE_VOTES, average } from "./votings";
 export const SOCKET_URL =
   window.__RUNTIME_CONFIG__?.SOCKET_URL ?? "ws://localhost:8080";
 
-const socket = io(`${SOCKET_URL}${window.location.pathname}`, {
-  autoConnect: true,
-  transports: ["websocket"],
-  withCredentials: true,
-  timestampRequests: true,
-});
+const getSocket = (pathname: string) => {
+  const socket = io(`${SOCKET_URL}${pathname}`, {
+    autoConnect: false,
+    transports: ["websocket"],
+    withCredentials: true,
+    timestampRequests: true,
+  });
+  return socket;
+};
 
 const VOTE_BUTTON_STYLE = "p-4 rounded-md text-white hover:-translate-y-0.5";
 
@@ -23,29 +26,54 @@ const VOTE_BUTTON_STYLE_INACTIVE =
 function Room() {
   const [vote, setVote] = useState("");
   const [votings, setVotings] = useState([]);
+  const [socket, setSocket] = useState<Socket>();
 
+  // Resets the local vote
   const reset = () => {
     setVote("");
   };
 
-  useEffect(() => {
-    socket.on("RESET", reset);
+  const handleClickReset = () => {
+    if (socket) {
+      reset();
+      socket.emit("RESET");
+    }
+  };
 
-    socket.on("VOTINGS", (data) => {
-      setVotings(data);
-    });
-  }, []);
-
+  // Initialize the socket whenever this component mounts or
+  // the pathname changes
   useEffect(() => {
-    if (vote !== "") {
+    if (window.location.pathname.length > 1 && socket === undefined) {
+      setSocket(getSocket(window.location.pathname));
+    }
+  }, [window.location.pathname]);
+
+  // Connect the socket and disconnect on unmount
+  useEffect(() => {
+    socket?.connect();
+
+    return () => {
+      socket?.disconnect();
+    };
+  }, [socket]);
+
+  // Initialize socket listeners
+  useEffect(() => {
+    if (socket) {
+      socket.on("RESET", reset);
+
+      socket.on("VOTINGS", (data) => {
+        setVotings(data);
+      });
+    }
+  }, [socket]);
+
+  // Send vote
+  useEffect(() => {
+    if (socket && vote !== "") {
       socket.emit("VOTE", vote);
     }
-  }, [vote]);
-
-  const handleClickReset = () => {
-    reset();
-    socket.emit("RESET");
-  };
+  }, [socket, vote]);
 
   const showResults = shouldShowResults(votings);
 

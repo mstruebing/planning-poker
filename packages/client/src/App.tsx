@@ -29,7 +29,7 @@ function App() {
   };
 
   return (
-    <form className="container mx-auto w-6/12">
+    <form onSubmit={joinRoom} className="container mx-auto w-6/12">
       <div className="flex items-center border-b border-teal-500 py-2">
         <input
           onInput={(e) => setRoomNumber(e.currentTarget.value)}
