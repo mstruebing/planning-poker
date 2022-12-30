@@ -9,7 +9,7 @@ export const SOCKET_URL =
 
 const getSocket = (pathname: string) => {
   const socket = io(`${SOCKET_URL}${pathname}`, {
-    autoConnect: false,
+    autoConnect: true,
     transports: ["websocket"],
     withCredentials: true,
     timestampRequests: true,
@@ -43,19 +43,16 @@ function Room() {
   // Initialize the socket whenever this component mounts or
   // the pathname changes
   useEffect(() => {
-    if (window.location.pathname.length > 1 && socket === undefined) {
-      setSocket(getSocket(window.location.pathname));
+    // @ts-ignore
+    if (socket?.nsp !== window.location.pathname) {
+      const sock = getSocket(window.location.pathname);
+      setSocket(sock);
+
+      return () => {
+        sock.disconnect();
+      };
     }
   }, [window.location.pathname]);
-
-  // Connect the socket and disconnect on unmount
-  useEffect(() => {
-    socket?.connect();
-
-    return () => {
-      socket?.disconnect();
-    };
-  }, [socket]);
 
   // Initialize socket listeners
   useEffect(() => {

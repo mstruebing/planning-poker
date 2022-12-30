@@ -3,11 +3,11 @@ import { initialize, redis } from "./server";
 const io = initialize();
 
 const getFreeRandomRoom = async () => {
+  const rooms = await redis.smembers("rooms");
+
   while (true) {
     const random = Math.random().toString(16).substr(2, 8);
-    const result = await redis.sismember("rooms", random);
-
-    if (result === 0) {
+    if (!rooms.includes(`/${random}`)) {
       return random;
     }
   }
@@ -23,7 +23,10 @@ io.on("connection", async (socket) => {
 const rooms = io.of(/^\/\w+$/);
 
 rooms.on("connection", async (socket) => {
+  // A set to store which rooms are used, which is needed to provide the user
+  // with a room id
   await redis.sadd("rooms", socket.nsp.name);
+
   // Broadcast votes also sends all votes to the
   // socket responsible for triggering the broadcast
   const broadcastVotes = async () => {
@@ -41,7 +44,11 @@ rooms.on("connection", async (socket) => {
 
   // Debug logs
   socket.onAny((event, ...args) => {
-    console.log(`got event: ${event}, with args: ${JSON.stringify(args)}`);
+    console.log(
+      `got event: ${event}, with args: ${JSON.stringify(args)} for room: ${
+        socket.nsp.name
+      }`
+    );
   });
 
   socket.on("VOTE", async (vote) => {
